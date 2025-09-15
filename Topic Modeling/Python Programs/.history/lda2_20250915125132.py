@@ -1,3 +1,26 @@
+"""
+Script: Topic number search and topic-word export with coherence
+
+Author: Xinxin Wang
+
+Description:
+  - Reads raw and cleaned TXT articles, builds dictionary and corpus.
+  - Trains LDA models for a range of topic counts and computes UMass coherence.
+  - Exports per-topic top words and a CSV of coherence vs. num_topics.
+
+Inputs:
+  - Raw TXT files: C:/Users/10292/Downloads/news_txt/{file}.txt
+  - Cleaned TXT files: C:/Users/10292/Downloads/news_txt_cleaned/{file}.txt
+
+Outputs:
+  - "{num_topics} topics .csv" for each topic count with top words per topic.
+  - "coherence.csv" with columns [num_topics, u_mass].
+
+Notes:
+  - Requires: gensim, pandas
+  - Ensure input directories exist.
+"""
+
 import os
 import pandas as pd
 from gensim import corpora, models
@@ -6,7 +29,7 @@ from gensim.models.coherencemodel import CoherenceModel
 
 if __name__ == '__main__':
 
-    ## read txt and cleaned txt
+    ## Read raw and cleaned TXT
     full_info=[]
     words_ls=[]
     t_list = os.listdir('C:/Users/10292/Downloads/news_txt')
@@ -23,28 +46,28 @@ if __name__ == '__main__':
     full_info_df =pd.DataFrame(full_info,columns=['title','content','words'])
 
 
-    # 构造词典
+    # Build dictionary
     dictionary = corpora.Dictionary(words_ls)
 
     stopword=['香港','移民','港人','潮']
     stop_ids = [dictionary.token2id[s] for s in stopword if s in dictionary.token2id]
     dictionary.filter_tokens(stop_ids)
-    dictionary.compactify()  # 去掉因删除词汇而出现的空白
+    dictionary.compactify()  # Remove gaps caused by the deleted tokens
 
-    # 基于词典，使【词】→【稀疏向量】，并将向量放入列表，形成【稀疏向量集】
+    # Create BoW corpus from tokenized documents
     corpus = [dictionary.doc2bow(words) for words in words_ls]
 
 
     coherence=[]
 
     for num_topics in range(3,15):
-        # lda模型，num_topics设置主题的个数
+        # Train LDA model; num_topics sets the number of topics
         lda = models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=num_topics)
         coherence_u_mass = CoherenceModel(model=lda, texts=words_ls, dictionary=dictionary, coherence='u_mass')
 
         coherence.append([num_topics,coherence_u_mass.get_coherence()])
         
-        # 打印所有主题，每个主题显示100个词
+        # Export top words per topic (100 words)
         result=pd.DataFrame(lda.show_topics(num_topics=num_topics, num_words=100, log=False, formatted=False))
         frame=[]
         for i in range(num_topics):

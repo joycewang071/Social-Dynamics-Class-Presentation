@@ -1,3 +1,9 @@
+"""
+Script: PDF to TXT batch extractor for Chinese text
+Author: Xinxin Wang
+
+"""
+
 import sys
 import importlib
 importlib.reload(sys)
@@ -11,39 +17,39 @@ from pdfminer.converter import PDFPageAggregator
 from pdfminer.layout import LTTextBoxHorizontal,LAParams
 from pdfminer.pdfpage import PDFTextExtractionNotAllowed
 
-# 对本地保存的pdf文件进行读取和写入到txt文件当中
+# Read locally saved PDF files and write extracted text into TXT files
 
 
-# 定义解析函数
+# Define parsing function
 def pdftotxt(path,new_name):
-    # 创建一个文档分析器
+    # Create a document parser
     parser = PDFParser(path)
-    # 创建一个PDF文档对象存储文档结构
+    # Create a PDF document object to store the document structure
     document =PDFDocument(parser)
-    # 判断文件是否允许文本提取
+    # Check whether the file allows text extraction
     if not document.is_extractable:
         raise PDFTextExtractionNotAllowed
     else:
-        # 创建一个PDF资源管理器对象来存储资源
+        # Create a PDF resource manager to store shared resources
         resmag =PDFResourceManager()
-        # 设定参数进行分析
+        # Set layout analysis parameters
         laparams =LAParams()
-        # 创建一个PDF设备对象
-        # device=PDFDevice(resmag)
+        # Create a PDF device
+        # device = PDFDevice(resmag)
         device =PDFPageAggregator(resmag,laparams=laparams)
-        # 创建一个PDF解释器对象
+        # Create a PDF interpreter
         interpreter = PDFPageInterpreter(resmag, device)
-        # 处理每一页
+        # Process each page
         for page in PDFPage.create_pages(document):
             interpreter.process_page(page)
-            # 接受该页面的LTPage对象
+            # Receive the LTPage object of the current page
             layout =device.get_result()
             for y in layout:
                 if(isinstance(y,LTTextBoxHorizontal)):
                     with open("C:/Users/10292/Downloads/news_txt/%s"%(new_name),'a',encoding="utf-8") as f:
                         f.write(re.sub('[^\u4e00-\u9fa5]+', '', y.get_text())+"\n")
 
-############ 还是要用‘’来替换， 而不是‘ ’， 否则会出现不必要的分割
+############ Use '' (empty string) for replacement instead of a single space ' ' to avoid unnecessary splits
 
 ## From PDF to TXT
 i=0

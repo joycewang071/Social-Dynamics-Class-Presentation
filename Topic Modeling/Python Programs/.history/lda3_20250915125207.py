@@ -1,3 +1,30 @@
+"""
+Script: LDA training, topic export, document-topic ranking, and word clouds
+
+Author: Xinxin Wang
+
+Description:
+  - Builds dictionary and corpus from cleaned tokens, trains an LDA model with a
+    fixed number of topics, and computes UMass coherence.
+  - Exports top words per topic, ranks documents by their dominant topic, and
+    generates word clouds for each topic.
+  - Moves article files into folders by dominant topic.
+
+Inputs:
+  - Cleaned TXT files: C:/Users/10292/Downloads/news_txt_cleaned/{file}.txt
+  - Original TXT files (for moving): C:/Users/10292/Downloads/news_txt - Copy/{file}.txt
+
+Outputs:
+  - "{num_topics} topics .csv" with top words per topic.
+  - "ranked articles for the dominant topic {i}.csv" per topic with ranked articles.
+  - Word clouds displayed for each topic.
+  - Files moved under: C:/Users/10292/Downloads/topic {i}/{file}.txt
+
+Notes:
+  - Requires: gensim, pandas, numpy, matplotlib, wordcloud
+  - Ensure all input/output directories exist; set font_path for Chinese display.
+"""
+
 import os
 import pandas as pd
 from gensim import corpora, models
@@ -7,7 +34,7 @@ import numpy as np
 num_topics=6
 
 
-## read txt and cleaned txt
+## Read cleaned TXT
 full_info=[]
 words_ls=[]
 t_list = os.listdir('C:/Users/10292/Downloads/news_txt')
@@ -29,8 +56,7 @@ corpus = [dictionary.doc2bow(words) for words in words_ls]
 lda = models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=num_topics)
 coherence_u_mass = CoherenceModel(model=lda, texts=words_ls, dictionary=dictionary, coherence='u_mass')
 
-
-# 打印所有主题，每个主题显示100个词
+# Export all topics; each topic shows 100 top words
 result=pd.DataFrame(lda.show_topics(num_topics=num_topics, num_words=100, log=False, formatted=False))
 frame=[]
 for i in range(num_topics):
